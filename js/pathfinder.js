@@ -2,7 +2,7 @@
 var obstacle_str =
 `XXXXXXXXXXXXXXXXXXXX
 X    X X  X        X
-X X  X X   XXX XXX X
+X X  X X  XXXX XXX X
 X XX     XX    XXX X
 X  XXXXX       X   X
 X      X XX    Xs XX
@@ -11,16 +11,20 @@ XXX  XXXX XXXXXXXXXX
 X    X X  X        X
 X X  X X   XXX XXX X
 X XX     XX    XXX X
-X  XXXXX       X   X
-X      X XX    Xg XX
+X  XXXXX  g    X   X
+X      X XX    X  XX
 XXXXXXXXXXXXXXXXXXXX`;
 
 
 
+
 class PathFinder {
-    constructor() {
-        this.canvas = document.getElementById("pathfinder");
+    constructor(canvas, slider) {
+        this.canvas = canvas;
         this.context = this.canvas.getContext("2d");
+
+        this.slider = slider;
+
         this.old_time = Date.now();
         this.fps = 60;
         this.holdfps = 60;
@@ -40,7 +44,7 @@ class PathFinder {
             height: this.obstacles.length,
             block_size: 30
         };
-        this.no_flyers = 500;
+        this.no_flyers = this.slider.value;
         this.map = new Map(this.obstacles, grid_settings);
         this.add_flyers();
 
@@ -95,6 +99,9 @@ class PathFinder {
         let delta = Date.now() - this.old_time;
         this.old_time += delta;
         this.fps = 1000/delta;
+
+        this.check_no_flyers();
+
         for (let flyer of this.flyers) {
             flyer.update();
         }
@@ -104,9 +111,7 @@ class PathFinder {
         this.context.clearRect(0,0,this.canvas.width, this.canvas.height);
         this.map.draw(this.context);
 
-        this.context.fillStyle = "cyan";
-        this.context.shadowBlur = 4;
-        this.context.shadowColor = "green";
+
         for (let flyer of this.flyers) {
             flyer.draw(this.context);
         }
@@ -122,6 +127,26 @@ class PathFinder {
     Astar() {
 
 
+    }
+
+
+    check_no_flyers() {
+        if (this.slider.value != this.no_flyers) {
+            let diff = this.slider.value - this.no_flyers;
+
+            if (diff < 0) {
+                for (let i=0;i<Math.abs(diff);i++) {
+                    this.flyers.pop();
+                }
+            } else {
+                let x_pos = this.start.x*this.map.grid_block_size+this.map.grid_block_size/2;
+                let y_pos = this.start.y*this.map.grid_block_size+this.map.grid_block_size/2;
+                for (let i=0;i<diff;i++) {
+                    this.flyers.push(new Flyer(this,x_pos,y_pos,3));
+                }
+            }
+            this.no_flyers = this.slider.value;
+        }
     }
 }
 
@@ -184,16 +209,25 @@ class Map {
 
 class Flyer {
     constructor(parent, pos_x, pos_y, size) {
-        this.parent = parent
+        this.parent = parent;
         this.x = pos_x;
         this.y = pos_y;
         this.size = size;
         this.acceleration = {x:0, y:0};
         this.speed = {x:0, y:0};
         this.frame = 0;
+        this.reached_end = false;
     }
 
     draw(context) {
+        if (this.reached_end) {
+            context.fillStyle = "lime";
+        } else {
+            context.fillStyle = "cyan";
+        }
+
+        context.shadowBlur = 4;
+        context.shadowColor = "green";
         context.beginPath();
         context.arc(this.x,this.y,this.size,0,2*Math.PI);
         context.fill();
@@ -214,9 +248,9 @@ class Flyer {
 
     check_collision() {
         let grid_block_size = this.parent.map.grid_block_size;
-        let x_coord = this.x/grid_block_size;
-        let y_coord = this.y/grid_block_size;
-        let grid_obj = this.parent.map.map[Math.floor(y_coord)][Math.floor(x_coord)];
+        let x_coord = Math.floor(this.x/grid_block_size);
+        let y_coord = Math.floor(this.y/grid_block_size);
+        let grid_obj = this.parent.map.map[y_coord][x_coord];
         if (grid_obj != null) {
             if (this.x % grid_block_size < 4) {
                 this.x = this.old_x;
@@ -238,9 +272,15 @@ class Flyer {
                 this.speed.y = 0;
             }
         }
+
+        if (x_coord == this.parent.goal.x && y_coord == this.parent.goal.y) {
+            this.reached_end = true;
+        }
+
     }
 }
 
 
 
-x = new PathFinder();
+var pathfinderobj = new PathFinder(document.getElementById("pathfinder"), document.getElementById("flyers"));
+
