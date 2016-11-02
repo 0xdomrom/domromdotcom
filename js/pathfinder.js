@@ -1,5 +1,5 @@
 
-var obstacle_str =
+var block_str =
 `XXXXXXXXXXXXXXXXXXXX
 X    X X  X        X
 X X  X X  XXXX XXX X
@@ -7,11 +7,11 @@ X XX     XX    XXX X
 X  XXXXX       X   X
 X      X XX    Xs XX
 XXX    XXXXX   XXXXX
-XXX  XXXX XXXXXXXXXX
+XXX  XXX  XXXXXXXXXX
 X    X X  X        X
-X X  X X   XXX XXX X
-X XX     XX    XXX X
-X  XXXXX  g    X   X
+X X  X X  XXXX XXX X
+X XX     XX  X XXX X
+X  XXXXX  g  X X   X
 X      X XX    X  XX
 XXXXXXXXXXXXXXXXXXXX`;
 
@@ -36,33 +36,42 @@ class PathFinder {
         this.run_loop();
     }
 
-    setup() {
-        this.setup_grid();
+    restart() {
+        this.setup();
+        this.canvas.width = this.map.width();
+        this.canvas.height = this.map.height();
+    }
 
+    setup() {
+
+        let block_size = 30;
+
+        this.setup_grid(30);
         let grid_settings = {
-            width: this.obstacles[0].length,
-            height: this.obstacles.length,
-            block_size: 30
+            width: this.blocks[0].length,
+            height: this.blocks.length,
+            block_size: block_size
         };
+
         this.no_flyers = this.slider.value;
-        this.map = new Map(this.obstacles, grid_settings);
+        this.map = new Map(this.blocks, grid_settings);
         this.add_flyers();
 
 
 
     }
 
-    setup_grid() {
-        this.obstacles = [];
+    setup_grid(block_size) {
+        this.blocks = [];
         let y = 0;
-        for (let line of obstacle_str.split("\n")) {
-            this.obstacles.push([]);
+        for (let line of block_str.split("\n")) {
+            this.blocks.push([]);
             for (var x = 0, len = line.length; x < len; x++) {
                 if (line[x] == "X") {
-                    this.obstacles[this.obstacles.length-1].push(new Obstacle(x, y));
+                    this.blocks[this.blocks.length-1].push(new Block(x, y, block_size, true));
                     continue;
                 } else {
-                    this.obstacles[this.obstacles.length-1].push(null);
+                    this.blocks[this.blocks.length-1].push(new Block(x, y, block_size, false));
                 }
 
                 if (line[x] == "s") {
@@ -151,26 +160,57 @@ class PathFinder {
 }
 
 
-class Obstacle {
-    constructor(grid_pos_x, grid_pos_y) {
+class Block {
+    constructor(grid_pos_x, grid_pos_y, block_size, is_obst) {
         this.x = grid_pos_x;
         this.y = grid_pos_y;
+        this.block_size = block_size;
+        this.obstacle = is_obst;
+        this.dir = {'x':Math.random()*2-1, 'y':Math.random()*2-1};
+        let angle = Math.atan2(this.dir.x, this.dir.y);
+        this.x_force = Math.cos(angle) * this.block_size/2;
+        this.y_force = Math.sin(angle) * this.block_size/2;
     }
 
     get_coords() {
         return {x:this.x, y:this.y}
     }
+
+    draw(context) {
+        if (!this.obstacle) {
+
+            context.strokeStyle = "pink";
+            context.strokeWidth = 2;
+
+            let block_pos = this.get_coords();
+
+            let x_center = block_pos.x * this.block_size+this.block_size/2;
+            let y_center = block_pos.y * this.block_size+this.block_size/2;
+
+            context.beginPath();
+            context.moveTo(x_center,y_center);
+            context.lineTo(x_center+this.x_force,
+                            y_center+this.y_force);
+            context.stroke();
+        }
+    }
+
+    add_speed(vector) {
+        vector.x += this.x_force/this.block_size/5;
+        vector.y += this.y_force/this.block_size/5;
+        return vector
+    }
 }
 
 
 class Map {
-    constructor(obstacles, grid_size) {
-        this.map = obstacles;
-        this.obstacles = [];
-        for (let row of obstacles) {
+    constructor(blocks, grid_size) {
+        this.map = blocks;
+        this.blocks = [];
+        for (let row of blocks) {
             for (let i of row) {
                 if (i != null) {
-                    this.obstacles.push(i);
+                    this.blocks.push(i);
                 }
             }
         }
@@ -188,10 +228,11 @@ class Map {
     }
 
     draw(context) {
-        context.fillStyle = "red";
         for (let line of this.map) {
             for (let block of line) {
-                if (block != null) {
+                if (block.obstacle) {
+                    context.fillStyle = "red";
+
                     context.beginPath();
                     let block_pos = block.get_coords();
                     context.fillRect(block_pos.x * this.grid_block_size,
@@ -199,6 +240,17 @@ class Map {
                         this.grid_block_size,
                         this.grid_block_size);
                     context.fill();
+                } else {
+                    context.fillStyle = "blue";
+                    context.beginPath();
+                    let block_pos = block.get_coords();
+                    context.fillRect(block_pos.x * this.grid_block_size,
+                        block_pos.y * this.grid_block_size,
+                        this.grid_block_size,
+                        this.grid_block_size);
+                    context.fill();
+
+                    block.draw(context);
                 }
             }
         }
@@ -223,54 +275,86 @@ class Flyer {
         if (this.reached_end) {
             context.fillStyle = "lime";
         } else {
-            context.fillStyle = "cyan";
+            context.fillStyle = "white";
         }
 
-        context.shadowBlur = 4;
-        context.shadowColor = "green";
+        context.shadowBlur = 10;
+        context.shadowColor = "orange";
         context.beginPath();
         context.arc(this.x,this.y,this.size,0,2*Math.PI);
         context.fill();
     }
 
     update() {
-        if (this.frame%10) {
-            this.acceleration = {x:Math.random()*32-16,y:Math.random()*32-16}
-        }
-        this.speed = {x:this.speed.x+this.acceleration.x/180.0, y:this.speed.y+this.acceleration.y/180.0};
-        this.old_x = this.x;
-        this.old_y = this.y;
-        this.x += this.speed.x;
-        this.y += this.speed.y;
-        this.frame += 1;
-        this.check_collision()
-    }
-
-    check_collision() {
         let grid_block_size = this.parent.map.grid_block_size;
         let x_coord = Math.floor(this.x/grid_block_size);
         let y_coord = Math.floor(this.y/grid_block_size);
         let grid_obj = this.parent.map.map[y_coord][x_coord];
-        if (grid_obj != null) {
-            if (this.x % grid_block_size < 4) {
+
+        if (this.frame%10) {
+            this.acceleration = {x:Math.random()*32-16,y:Math.random()*32-16}
+        }
+        this.speed = {x:this.speed.x+this.acceleration.x/180.0, y:this.speed.y+this.acceleration.y/180.0};
+
+        let temp_speed = grid_obj.add_speed(this.speed);
+
+        this.old_x = this.x;
+        this.old_y = this.y;
+        this.x += Math.max(-1, Math.min(1,temp_speed.x));
+        this.y += Math.max(-1, Math.min(1,temp_speed.y));
+        this.frame += 1;
+
+        this.check_collision(x_coord, y_coord, grid_block_size, grid_obj);
+    }
+
+    check_collision(x_coord, y_coord, grid_block_size, grid_obj) {
+        if (grid_obj.obstacle) {
+            let moved = false;
+
+            if (x_coord == 0) {
                 this.x = this.old_x;
-                this.acceleration.x = 0;
-                this.speed.x = 0;
-            } else if (this.x % grid_block_size > grid_block_size-4) {
+                moved = true;
+            }
+            if (y_coord == 0) {
+                this.y = this.old_y;
+                moved = true;
+            }
+            if (x_coord+1 == this.parent.map.map[y_coord].length) {
                 this.x = this.old_x;
-                this.acceleration.x = 0;
-                this.speed.x = 0;
+                moved = true;
             }
-            if (this.y % grid_block_size < 4) {
+            if (y_coord+1 == this.parent.map.map.length) {
                 this.y = this.old_y;
-                this.acceleration.y = 0;
-                this.speed.y = 0;
+                moved = true;
             }
-            if (this.y % grid_block_size > grid_block_size-4) {
-                this.y = this.old_y;
-                this.acceleration.y = 0;
-                this.speed.y = 0;
+            if (!moved) {
+                if (this.x % grid_block_size < grid_block_size/2) {
+                    if (!this.parent.map.map[y_coord][x_coord - 1].obstacle) {
+                        this.x = this.old_x;
+                        moved = true;
+                    }
+                }
+                if (this.x % grid_block_size > grid_block_size/2) {
+                    if (!this.parent.map.map[y_coord][x_coord + 1].obstacle) {
+                        this.x = this.old_x;
+                        moved = true;
+                    }
+                }
+                if (this.y % grid_block_size < grid_block_size/2) {
+                    if (!this.parent.map.map[y_coord - 1][x_coord].obstacle) {
+                        this.y = this.old_y;
+                        moved = true;
+                    }
+                }
+                if (this.y % grid_block_size > grid_block_size/2) {
+                    if (!this.parent.map.map[y_coord + 1][x_coord].obstacle) {
+                        this.y = this.old_y;
+                        moved = true;
+                    }
+                }
             }
+            if (!moved)
+                console.log(moved);
         }
 
         if (x_coord == this.parent.goal.x && y_coord == this.parent.goal.y) {
@@ -280,7 +364,12 @@ class Flyer {
     }
 }
 
-
-
 var pathfinderobj = new PathFinder(document.getElementById("pathfinder"), document.getElementById("flyers"));
+
+
+
+function restart() {
+    pathfinderobj.restart();
+}
+
 
