@@ -1,4 +1,6 @@
 
+var directions = [[-1,-1],[-1,0],[0,-1],[-1,1],[1,-1],[1,1],[1,0],[0,1]];
+
 var block_str =
 `XXXXXXXXXXXXXXXXXXXX
 X    X X  X        X
@@ -16,10 +18,24 @@ X      X XX    X  XX
 XXXXXXXXXXXXXXXXXXXX`;
 
 
+function calc_dist(p1, p2) {
+    // euclidean distance
+    // console.log("calc dist: "+p1.x+"-"+p1.y+" to "+p2.x+"-"+p2.y);
+    // console.log(p1.x-p2.x, p1.y-p2.y);
+    // console.log(Math.pow(p1.x-p2.x, 2)+Math.pow(p1.y-p2.y, 2));
+    //console.log(Math.sqrt(Math.pow(p1.x-p2.x, 2)+Math.pow(p1.y-p2.y, 2)));
+    return (Math.abs(p1.x-p2.x) + Math.abs(p1.y-p2.y));
+    //return Math.sqrt(Math.pow(p1.x-p2.x, 2)+Math.pow(p1.y-p2.y, 2))
+}
+
+
 
 
 class PathFinder {
     constructor(canvas, slider) {
+        this.meme = [];
+
+
         this.canvas = canvas;
         this.context = this.canvas.getContext("2d");
 
@@ -43,21 +59,22 @@ class PathFinder {
     }
 
     setup() {
-
-        let block_size = 30;
+        this.start = null;
+        this.goal = null;
+        this.block_size = 30;
 
         this.setup_grid(30);
         let grid_settings = {
             width: this.blocks[0].length,
             height: this.blocks.length,
-            block_size: block_size
+            block_size: this.block_size
         };
 
         this.no_flyers = this.slider.value;
         this.map = new Map(this.blocks, grid_settings);
         this.add_flyers();
 
-
+        this.shortest_path = this.Astar();
 
     }
 
@@ -85,7 +102,6 @@ class PathFinder {
 
             y += 1;
         }
-
     }
 
     add_flyers() {
@@ -131,16 +147,157 @@ class PathFinder {
             this.holdfps = this.fps;
         }
         this.context.fillText(this.holdfps.toFixed(1), 10, 10);
+
+
+
+        this.context.strokeStyle = "red";
+        this.context.strokeWidth = 4;
+        this.context.beginPath();
+        this.context.moveTo(this.shortest_path[0].x*this.block_size+15,
+                            this.shortest_path[0].y*this.block_size+15);
+        for (let i in this.shortest_path) {
+            this.context.lineTo(
+                this.shortest_path[i].x*this.block_size+15,
+                this.shortest_path[i].y*this.block_size+15);
+        }
+
+        this.context.stroke();
+
+
+        //
+        // this.context.strokeStyle = "blue";
+        // this.context.strokeWidth = 4;
+        // this.context.beginPath();
+        // this.context.moveTo(this.meme[0].x*this.block_size+18,
+        //                     this.meme[0].y*this.block_size+20);
+        // for (let i in this.meme) {
+        //     this.context.lineTo(
+        //         this.meme[i].x*this.block_size+18,
+        //         this.meme[i].y*this.block_size+20);
+        // }
+        //
+        // this.context.stroke();
+
     }
+
+
+    initialiseAstar() {
+        console.log("start:"+this.start.x + "-" + this.start.y);
+        console.log("goal:"+this.goal.x + "-" + this.goal.y);
+        var h_vals = [];
+
+        for (let i = 0; i<this.blocks.length;i++) {
+            h_vals.push([]);
+            for (let j=0; j<this.blocks[0].length;j++) {
+                let dist = calc_dist({x:j,y:i}, this.goal);
+                h_vals[h_vals.length-1].push(dist);
+            }
+        }
+
+        var came_from = [];
+        for (let i = 0; i<this.blocks.length;i++) {
+            came_from.push([]);
+            for (let j=0; j<this.blocks[0].length;j++) {
+                came_from[came_from.length-1].push([null, null])
+            }
+        }
+
+        var gScore = [];
+        // cost of getting from start to that node
+        for (let i = 0; i<this.blocks.length;i++) {
+            gScore.push([]);
+            for (let j=0; j<this.blocks[0].length;j++) {
+                gScore[gScore.length-1].push(Infinity)
+            }
+        }
+
+        var closed_set = [];
+        // nodes that have been visited
+        for (let i = 0; i<this.blocks.length;i++) {
+            closed_set.push([]);
+            for (let j=0; j<this.blocks[0].length;j++) {
+                closed_set[closed_set.length-1].push(false)
+            }
+        }
+
+        var fScore = [];
+        // For each node, the total cost of getting from the start node to the goal
+        // by passing by that node
+        for (let i = 0; i<this.blocks.length;i++) {
+            fScore.push([]);
+            for (let j=0; j<this.blocks[0].length;j++) {
+                fScore[fScore.length-1].push(Infinity)
+            }
+        }
+
+        fScore[this.start.y][this.start.x] = h_vals[this.start.y][this.start.x];
+
+
+        return [h_vals, came_from, gScore, fScore, closed_set];
+    }
+
+
 
     Astar() {
 
-        var closed_set = [];
+        var open_set = [this.blocks[this.start.y][this.start.x]];
 
-        var open_set = [this.map.start];
+        var init_obj = this.initialiseAstar();
 
-        var came_from = {};
+        var h_vals = init_obj[0];
+        var came_from = init_obj[1];
+        var gScore = init_obj[2];
+        var fScore = init_obj[3];
+        var closed_set = init_obj[4];
 
+
+        while (open_set.length != 0) {
+            let current = null;
+            let ind = 0;
+            for (let i=0; i<open_set.length; i++) {
+                if (current==null) {
+                    current = open_set[i];
+                    ind = i;
+                } else if (fScore[open_set[i].y][open_set[i].x] < fScore[current.y][current.x]) {
+                    current = open_set[i];
+                    ind = i;
+                }
+            }
+            this.meme.push(current);
+
+            if (current.x == this.goal.x && current.y == this.goal.y) {
+                console.log("goal found! :D");
+                let at = {x:current.x, y:current.y};
+                let path = [at];
+                while (at.x != this.start.x || at.y != this.start.y) {
+                    at = {x:came_from[at.y][at.x].x, y:came_from[at.y][at.x].y};
+                    path.push(at);
+                    console.log(at, this.start)
+                }
+
+                return path;
+            }
+
+            open_set.splice(ind, 1);
+            closed_set[current.y][current.x] = true;
+            for (let dir of directions) {
+                let neighbor = this.blocks[current.y+dir[0]][current.x+dir[1]];
+                if (closed_set[current.y+dir[0]][current.x+dir[1]] ||
+                    neighbor.obstacle) {
+                    continue;
+                }
+                let tentative_gscore = gScore[current.y][current.x] + calc_dist(current, neighbor);
+                if (open_set.indexOf(neighbor) == -1) {
+                    open_set.push(neighbor);
+                } else if (tentative_gscore > gScore[neighbor.y][neighbor.y]) {
+                    continue;
+                }
+
+                came_from[neighbor.y][neighbor.x] = current;
+                gScore[neighbor.y][neighbor.y] = tentative_gscore;
+                fScore[neighbor.y][neighbor.x] = tentative_gscore + h_vals[neighbor.y][neighbor.x];
+            }
+        }
 
 
     }
@@ -203,8 +360,10 @@ class Block {
     }
 
     add_speed(vector) {
-        vector.x += this.x_force/this.block_size/5;
-        vector.y += this.y_force/this.block_size/5;
+        if (!this.obstacle) {
+            vector.y += this.y_force/this.block_size/5;
+            vector.x += this.x_force/this.block_size/5;
+        }
         return vector
     }
 }
