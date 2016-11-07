@@ -2,14 +2,16 @@
 
 
 class TreeDrawer {
-    constructor(canvas) {
+    constructor(canvas, height_slider, split_slider) {
 
         this.canvas = canvas;
         this.context = this.canvas.getContext("2d");
 
-        this.canvas.width = window.innerWidth-25;
-        this.canvas.height = window.innerHeight-25;
+        this.height_slider = height_slider;
+        this.split_slider = split_slider;
 
+        this.canvas.width = window.innerWidth-20;
+        this.canvas.height = window.innerHeight-100;
 
         this.old_time = Date.now();
         this.fps = 60;
@@ -23,8 +25,8 @@ class TreeDrawer {
 
 
     setup() {
-        this.tree_height = 9    ;
-        this.split_ratio = 2;
+        this.tree_height = this.height_slider.value;
+        this.split_ratio = this.split_slider.value;
 
         this.tree = new Tree(this.tree_height,this.split_ratio);
 
@@ -49,8 +51,10 @@ class TreeDrawer {
     draw() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.context.lineWidth = this.tree_height*4 + 4;
+        this.context.lineWidth = this.tree_height*2 + 40;
         this.context.strokeStyle = "black";
+        this.context.fillStyle = "orange";
+
         this.context.save();
         this.context.translate(this.canvas.width/2, this.canvas.height);
         this.tree.draw(this.context);
@@ -64,6 +68,11 @@ class TreeDrawer {
         this.context.fillText(this.holdfps.toFixed(1), 10, 10);
 
     }
+
+    reset() {
+
+    }
+
 }
 
 
@@ -76,20 +85,19 @@ class Tree {
     }
 
     build_tree() {
-        this.root = new Branch(this.height,20);
+        this.root = new Branch(this.height,30);
         this.root.add_children(this.height-1, this.split_ratio);
 
     }
 
-    update(time) {
+    update() {
         this.sin_val += 0.05;
-        this.force = Math.sin(this.sin_val)/2;
-        console.log(this.force);
+        this.force = Math.sin(this.sin_val)/10 - .2;
         this.root.update_force(this.force);
     }
 
     draw(context) {
-        this.root.draw(context)
+        this.root.draw(context, 0, 0)
     }
 }
 
@@ -97,22 +105,26 @@ class Branch {
     constructor(max_height, max_angle) {
         this.children = [];
         this.force = 0;
+        this.force_mult = 1;
         this.max_height = max_height;
         this.max_angle = max_angle;
 
     }
 
     add_children(height, split_ratio) {
+        let split = split_ratio;
+        if (Math.random() > 0.5) {
+            split++;
+        }
+
         if (height == 0) {
+            let leaf = new Leaf(this.max_height, this.max_angle);
+            this.children.push(leaf);
             return;
         }
 
         this.height = height;
 
-        let split = split_ratio;
-        if (Math.random() > 0.5) {
-            split++;
-        }
         for (let i=0; i<split; i++) {
             let new_branch = new Branch(this.max_height, this.max_angle);
             new_branch.add_children(height-1, split_ratio);
@@ -123,17 +135,30 @@ class Branch {
     update_force(force) {
         this.force = force;
 
+        // if (-0.001 < this.force && this.force < 0.001) {
+        //     this.force_mult = Math.random()*8 -4;
+        // }
+
+        this.force *= this.force_mult;
+
         for (let i of this.children) {
             i.update_force(force)
         }
 
     }
 
-    draw(context) {
+    draw(context, shift, angle) {
+        context.save();
+        context.translate(0, shift);
+        context.rotate(angle);
+
         context.lineWidth /= 2;
+
+        shift = 15/-(this.max_height - this.height)*15;
+
         context.beginPath();
         context.moveTo(0,0);
-        context.lineTo(0, 15/-(this.max_height - this.height)*15);
+        context.lineTo(0, shift);
         context.stroke();
         let angle_mod = this.max_angle*(this.children.length-1)*Math.PI/180/2;
 
@@ -141,16 +166,30 @@ class Branch {
 
 
         for (let i in this.children) {
-            context.save();
-            context.translate(0, 15/-(this.max_height - this.height)*15);
-            context.rotate(this.max_angle*i*Math.PI/180 - angle_mod);
-            this.children[i].draw(context);
-            context.restore()
-        }
 
-        context.lineWidth *= 2;
+            let angle = this.max_angle*i*Math.PI/180 - angle_mod;
+
+            this.children[this.children.length-1-i].draw(context, shift, angle);
+        }
+        context.restore()
+
     }
 }
 
 
-var x = new TreeDrawer(document.getElementById("tree"));
+class Leaf {
+    constructor(max_height) {
+        this.tree_height = max_height;
+    }
+
+    draw(context) {
+        context.arc(0, 0, 20/this.tree_height, 0, 2*Math.PI, 0);
+        context.fill();
+    }
+
+    update_force(force) {
+        return;
+    }
+}
+
+var x = new TreeDrawer(document.getElementById("tree"), document.getElementById("height"), document.getElementById("split"));
