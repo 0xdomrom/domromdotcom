@@ -1,0 +1,22 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Circles</title>
+</head>
+<body>
+<div id="inputs" style="height:50px">
+    <p style="float:left">Depth (2-10):</p>
+    <input style="float:left" type="range" id="depth" value="4" min="2" max="10" width="500px"/>
+    <p style="float:left">Split (1-10):</p>
+    <input style="float:left" type="range" id="split" value="3" min="1" max="10" width="500px"/>
+</div>
+<div id="gen_btn">
+    <button onclick="x.setup()">Generate</button>
+</div>
+<canvas id="circles" style="float:right"></canvas>
+<script src="js/circles.js"></script>
+
+</body>
+</html>
