@@ -1,7 +1,7 @@
 
 
 class Settings {
-    constructor(val1_slider, val2_slider, val3_slider) {
+    constructor(val1_slider, val2_slider, val3_slider, segments_slider) {
 
         this.val1_slider = val1_slider;
         this.val2_slider = val2_slider;
@@ -15,7 +15,7 @@ class Settings {
         this.old_val2 = this.val2();
         this.old_val3 = this.val3();
 
-
+        this.segments_slider = segments_slider;
 
         this.old_time = Date.now();
         this.fps = 60.0;
@@ -33,6 +33,10 @@ class Settings {
 
     val3() {
         return parseInt(this.val3_slider.value);
+    }
+
+    getSegments() {
+        return parseInt(this.segments_slider.value);
     }
 
     update() {
@@ -72,13 +76,14 @@ class Settings {
 
 
 class TriangleDrawer {
-    constructor(canvas, val1_slider, val2_slider, val3_slider) {
+    constructor(canvas, segments_slider, val1_slider, val2_slider, val3_slider) {
         this.canvas = canvas;
         this.context = this.canvas.getContext("2d");
-        this.canvas.width = 200;
-        this.canvas.height = 200;
+        this.size = 500;
+        this.canvas.width = this.size;
+        this.canvas.height = this.size;
 
-        this.settings = new Settings(val1_slider, val2_slider, val3_slider);
+        this.settings = new Settings(val1_slider, val2_slider, val3_slider, segments_slider);
 
         this.setup();
         this.run_loop = this.run_loop.bind(this);
@@ -90,8 +95,8 @@ class TriangleDrawer {
         this.val1 = this.settings.val1();
         this.val2 = this.settings.val2();
         this.val3 = this.settings.val3();
-
-        this.triangle = new Triangle(this.val1,this.val2, this.val3, 160);
+        this.segments = this.settings.getSegments();
+        this.triangle = new Triangle(this.val1,this.val2, this.val3, this.canvas.width-40, this.segments);
 
     }
 
@@ -129,18 +134,19 @@ class TriangleDrawer {
 
 
 class Triangle {
-    constructor(val1, val2, val3, size) {
+    constructor(val1, val2, val3, size, segments) {
         this.val1 = val1;
         this.val2 = val2;
         this.val3 = val3;
-        this.size = size
+        this.size = size;
+        this.segments = segments;
     }
 
     update(settings) {
         this.val1 = settings.val1();
         this.val2 = settings.val2();
         this.val3 = settings.val3();
-
+        this.segments = settings.getSegments();
     }
 
     draw(context) {
@@ -154,13 +160,13 @@ class Triangle {
 
         context.lineWidth = 1;
 
-        for (let i=1; i<=10; i++) {
+        for (let i=1; i<=this.segments; i++) {
             context.beginPath();
 
-            context.moveTo(10+i*this.size/10,10+this.size);
-            context.lineTo(10+this.size/2+i*this.size/20, 10+this.size-((this.size-i*this.size/10)/2*Math.sqrt(3)));
-            context.lineTo(10+this.size/2-i*this.size/20, 10+this.size-((this.size-i*this.size/10)/2*Math.sqrt(3)));
-            context.lineTo(10+(10-i)*this.size/10,10+this.size);
+            context.moveTo(10+i*this.size/this.segments,10+this.size);
+            context.lineTo(10+this.size/2+i*this.size/this.segments/2, 10+this.size-((this.size-i*this.size/this.segments)/2*Math.sqrt(3)));
+            context.lineTo(10+this.size/2-i*this.size/this.segments/2, 10+this.size-((this.size-i*this.size/this.segments)/2*Math.sqrt(3)));
+            context.lineTo(10+(this.segments-i)*this.size/this.segments,10+this.size);
             context.stroke();
         }
 
@@ -185,4 +191,5 @@ class Triangle {
 
 
 
-var x = new TriangleDrawer(document.getElementById("triangle"), document.getElementById("val1"), document.getElementById("val2"), document.getElementById("val3"));
+var x = new TriangleDrawer(document.getElementById("triangle"), document.getElementById("segments"), document.getElementById("val1"), document.getElementById("val2"), document.getElementById("val3"));
+
