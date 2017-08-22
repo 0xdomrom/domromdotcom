@@ -1,11 +1,11 @@
 
 
 class Settings {
-    constructor(value_sliders, angle_slider) {
+    constructor(slider_id, angle_slider) {
 
-        this.sliders = value_sliders;
+        this.slider_id = slider_id;
 
-        this.randomise();
+
 
         this.angle_slider = angle_slider;
 
@@ -13,6 +13,8 @@ class Settings {
         this.fps = 60.0;
         this.holdfps = 60.0;
         this.frames = 0;
+        this.update();
+        this.randomise();
     }
 
     randomise() {
@@ -38,8 +40,12 @@ class Settings {
         return vals;
     }
 
-    update() {
+    getNumSpokes() {
+        return this.sliders.length;
+    }
 
+    update() {
+        this.sliders=$(this.slider_id);
         this.frames += 1;
         let delta = Date.now() - this.old_time;
         this.old_time += delta;
@@ -50,23 +56,23 @@ class Settings {
 
 
 class SpokeDrawer {
-    constructor(canvas, graph_angle, value_sliders, angle_slider) {
+    constructor(canvas, graph_angle, slider_id, angle_slider) {
         this.canvas = canvas;
         this.context = this.canvas.getContext("2d");
         this.size = 400;
         this.canvas.width = this.size;
         this.canvas.height = this.size;
 
-        this.settings = new Settings(value_sliders, angle_slider);
+        this.settings = new Settings(slider_id, angle_slider);
 
-        this.setup(value_sliders.length, graph_angle);
+        this.setup(graph_angle);
         this.run_loop = this.run_loop.bind(this);
         this.run_loop();
     }
 
 
-    setup(num_spokes, graph_angle) {
-        this.spoke_graph = new SpokeGraph(num_spokes, graph_angle, this.settings, this.canvas.width);
+    setup(graph_angle) {
+        this.spoke_graph = new SpokeGraph(this.settings, this.canvas.width);
 
     }
 
@@ -78,7 +84,7 @@ class SpokeDrawer {
 
     update() {
         this.settings.update();
-        this.spoke_graph.update(this.settings);
+        this.spoke_graph.update();
     }
 
     draw() {
@@ -104,9 +110,8 @@ class SpokeDrawer {
 
 
 class SpokeGraph {
-    constructor(num_spokes, graph_angle, settings, size) {
+    constructor(settings, size) {
         this.segments = 5;
-        this.num_spokes = num_spokes;
         // if (graph_angle > 360) {
         //     graph_angle = 360;
         // } else if (graph_angle < 60) {
@@ -123,6 +128,7 @@ class SpokeGraph {
         this.values = this.settings.getSliderValues();
         this.max_values = this.settings.getMaxSliderValues();
         this.graph_angle = this.settings.angle_slider.value*Math.PI/180;
+        this.num_spokes = this.settings.getNumSpokes();
     }
 
     draw(context) {
@@ -174,11 +180,15 @@ class SpokeGraph {
     }
 }
 
+var x = new SpokeDrawer($("#spoke")[0], 360, ".value", $("#angle")[0]);
 
-
-var x = new SpokeDrawer(document.getElementById("spoke"), 360, [
-    document.getElementById("val1"), document.getElementById("val2"), document.getElementById("val3"),
-    document.getElementById("val4"), document.getElementById("val5"), document.getElementById("val6"),
-    document.getElementById("val7"), document.getElementById("val8"), document.getElementById("val9")],
-    document.getElementById("angle"));
-
+$("#add_value").click(function() {
+    console.log("clicko");
+    $("#hidden").replaceWith(
+        '<div class="row"> <p>Value '+
+        ($(".value").length+1)
+        +' (0-100):</p> </div> <div class="row">'+
+        ' <input type="range" class="value" value="10" min="0" max="100"/> </div>' +
+        '<div id="hidden" style="visibility:hidden"></div>'
+    )
+});

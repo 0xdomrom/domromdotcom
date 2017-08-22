@@ -1,24 +1,59 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Triangle</title>
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/slider.css">
 </head>
 <body>
-<div id="inputs" style="height:50px">
-    <p style="float:left">Segments(1-50):</p>
-    <input style="float:left" type="range" id="segments" value="6" min="1" max="50" width="500px"/>
-    <p style="float:left">Value 1 (0-100):</p>
-    <input style="float:left" type="range" id="val1" value="10" min="0" max="100" width="500px"/>
-    <p style="float:left">Value 2 (0-100):</p>
-    <input style="float:left" type="range" id="val2" value="10" min="0" max="100" width="500px"/>
-    <p style="float:left">Value 3 (0-100):</p>
-    <input style="float:left" type="range" id="val3" value="80" min="0" max="100" width="500px"/>
+<div class="row">
+    <div class="col">
+        <div class="row">
+        <h1>Triangle percentage graph</h1>
+        </div>
+        <div class="row">
+        <p>Displays the ratio of three items, by showing it closer to one corner (in a corner equals 100%).
+            Size is adjustable in the code.</p>
+        </div>
+        <div class="row">
+        <p>Todo: labels for corners, nicer point, background colours</p>
+        </div>
+    </div>
 </div>
-<p></p>
-<canvas id="triangle" style="float:left"></canvas>
-<script src="js/triangle.js"></script>
+<div class="row">
+    <div id="inputs" class="col-md-2">
+        <div class="row">
+            <p>Segments(1-50):</p>
+        </div>
+        <div class="row bottom-pad">
+            <input type="range" id="segments" value="6" min="1" max="50" width="500px"/>
+        </div>
+        <div class="row">
+            <p>Value 1 (0-100):</p>
+        </div>
+        <div class="row bottom-pad">
+            <input type="range" id="val1" value="10" min="0" max="100" width="500px"/>
+        </div>
+        <div class="row">
+            <p>Value 2 (0-100):</p>
+        </div>
+        <div class="row bottom-pad">
+            <input type="range" id="val2" value="10" min="0" max="100" width="500px"/>
+        </div>
+        <div class="row">
+            <p>Value 3 (0-100):</p>
+        </div>
+        <div class="row bottom-pad">
+            <input type="range" id="val3" value="80" min="0" max="100" width="500px"/>
+        </div>
 
+    </div>
+    <div class="col-md-7">
+        <canvas id="triangle"></canvas>
+    </div>
+</div>
+
+<script src="js/triangle.js"></script>
 </body>
 </html>
