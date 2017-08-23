@@ -183,12 +183,20 @@ class SpokeGraph {
 var x = new SpokeDrawer($("#spoke")[0], 360, ".value", $("#angle")[0]);
 
 $("#add_value").click(function() {
-    console.log("clicko");
     $("#hidden").replaceWith(
         '<div class="row"> <p>Value '+
         ($(".value").length+1)
         +' (0-100):</p> </div> <div class="row">'+
-        ' <input type="range" class="value" value="10" min="0" max="100"/> </div>' +
+        ' <input type="range" class="value" value="'+Math.floor(Math.random()*100)+
+        '" min="0" max="100"/> </div>' +
         '<div id="hidden" style="visibility:hidden"></div>'
     )
+});
+
+$("#remove_value").click(function() {
+    let selection = $("#inputs .row");
+    if (selection.length > 3) {
+        selection[selection.length-1].remove();
+        selection[selection.length-2].remove();
+    }
 });
