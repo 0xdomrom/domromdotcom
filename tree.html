@@ -1,23 +1,56 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Tree</title>
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/slider.css">
 </head>
 <body>
-<div id="inputs" style="height:50px">
-    <p style="float:left">Height (2-15):</p>
-    <input style="float:left" type="range" id="height" value="7" min="2" max="15" width="500px"/>
-    <p style="float:left">Split (1-5):</p>
-    <input style="float:left" type="range" id="split" value="3" min="1" max="5" width="500px"/>
-    <input type="checkbox" id="leaves"> Leaves? </input>
+<div class="row">
+    <div class="col">
+        <div class="row">
+            <h1>Tree</h1>
+        </div>
+        <div class="row">
+            <p>A tree that sways in the 'wind'. Remember when generating that the number of branches will be split^height</p>
+        </div>
+        <div class="row">
+            <p>TODO: real time scaling canvas size</p>
+        </div>
+    </div>
 </div>
-<div id="gen_btn">
-    <button onclick="x.setup()">Generate</button>
-</div>
-<canvas id="tree" style="float:right"></canvas>
-<script src="js/tree.js"></script>
+<div class="row">
+    <div id="inputs" class="col-md-2">
+        <div class="row">
+            <div id="gen_btn">
+                <button onclick="x.setup()">Generate</button>
+            </div>
+        </div>
+        <div class="row">
+            <p>Height(2-15):</p>
+        </div>
+        <div class="row bottom-pad">
+            <input type="range" id="height" value="7" min="1" max="15" width="500px"/>
+        </div>
+        <div class="row">
+            <p>Split (1-5):</p>
+        </div>
+        <div class="row bottom-pad">
+            <input type="range" id="split" value="3" min="1" max="5" width="500px"/>
+        </div>
+        <div class="row">
+            <input type="checkbox" id="leaves">Leaves?</input>
+        </div>
 
+    </div>
+    <div class="col-md-7">
+        <canvas id="tree"></canvas>
+    </div>
+</div>
+
+<script src="js/tree.js"></script>
 </body>
 </html>

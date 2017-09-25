@@ -1,13 +1,46 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Pathfinder</title>
+    <link rel="stylesheet" type="text/css" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="./css/slider.css">
 </head>
 <body>
-    <canvas id="pathfinder"></canvas>
-    <input type="range" id="flyers" min="0" max="1000" width="500px"/>
-    <button onclick="restart()">Reload</button>
-    <script src="js/pathfinder.js"></script>
+<div class="row">
+    <div class="col">
+        <div class="row">
+            <h1>Pathfinder</h1>
+        </div>
+        <div class="row">
+            <p>Uses A* to generate vectors for the "flyers" to navigate the maze</p>
+        </div>
+        <div class="row">
+            <p>TODO: lubricate walls, real time changing start and goal</p>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div id="inputs" class="col-md-2">
+        <div class="row">
+            <p>Flyers (0-1000):</p>
+        </div>
+        <div class="row bottom-pad">
+            <input type="range" id="flyers" min="0" max="1000" width="500px"/>
+        </div>
+        <div class="row">
+            <button onclick="restart()">Reload</button>
+        </div>
+
+    </div>
+    <div class="col-md-7">
+        <canvas id="pathfinder"></canvas>
+    </div>
+</div>
+
+<script src="js/pathfinder.js"></script>
 </body>
 </html>

@@ -34,8 +34,8 @@ class CircleDrawer {
     constructor(canvas, depth_slider, split_slider) {
         this.canvas = canvas;
         this.context = canvas.getContext("2d");
-        this.canvas.width = window.innerWidth-20;
-        this.canvas.height = window.innerHeight-60;
+        this.canvas.width = window.innerWidth - 250;
+        this.canvas.height = window.innerHeight - 180;
 
         this.settings = new CircleSettings(depth_slider, split_slider);
 
@@ -86,7 +86,6 @@ class Circle {
     }
 
     setup() {
-        console.log(this.level)
         if (this.level == this.depth) {
             return
         }

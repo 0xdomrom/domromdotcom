@@ -39,8 +39,8 @@ class TreeDrawer {
     constructor(canvas, height_slider, split_slider, leaves_check) {
         this.canvas = canvas;
         this.context = this.canvas.getContext("2d");
-        this.canvas.width = window.innerWidth-20;
-        this.canvas.height = window.innerHeight-100;
+        this.canvas.width = window.innerWidth-250;
+        this.canvas.height = window.innerHeight-150;
 
         this.settings = new TreeSettings(height_slider, split_slider, leaves_check);
 
