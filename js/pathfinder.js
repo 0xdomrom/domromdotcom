@@ -546,12 +546,12 @@ class Flyer {
     check_collision(x_coord, y_coord, grid_block_size, grid_obj) {
         if (grid_obj.obstacle) {
 
-            if (x_coord == 0) {
-                this.x = this.old_x;
+            if (x_coord < 0) {
+                this.x = 0;
                 this.speed.x = 0;
-                this.acceleration.x = 0;
+                this.acceleration.x = 1;
             }
-            if (x_coord+1 == this.parent.map.map[y_coord].length) {
+            if (x_coord-1 == this.parent.map.map[y_coord].length) {
                 this.x = this.old_x;
                 this.speed.x = 0;
                 this.acceleration.x = 0;
@@ -562,7 +562,7 @@ class Flyer {
                 this.speed.y = 0;
                 this.acceleration.y = 0;
             }
-            if (y_coord+1 == this.parent.map.map.length) {
+            if (y_coord-1 == this.parent.map.map.length) {
                 this.y = this.old_y;
                 this.speed.y = 0;
                 this.acceleration.y = 0;
